@@ -237,3 +237,38 @@ erDiagram
 | `POST /api/ratings` *(JWT)* | MongoDB + PostgreSQL | `201` (calificación creada con datos copiados), `400` (validación), `403` (pedido de otro usuario), `404` (pedido no existe), `409` (ya calificado `E11000`), `401` |
 | `GET /api/ratings?dishId=` | MongoDB | `200` (lista con `populate("dish")`, orden `createdAt: -1` + `aggregate` de promedio y conteo), `400` (`dishId` inválido) |
 | `DELETE /api/ratings/:id` *(JWT)* | MongoDB | `200` (eliminado), `400`, `403` (no es dueño), `404`, `401` |
+
+## 8. Evidencias
+
+### 8.1 Postman — Run Collection (`37/37` aserciones en verde)
+
+![Postman Run Collection - Resumen y Auth](postman_run_01_auth.png)
+
+![Postman Run Collection - Dishes y Orders con $in](postman_run_02_dishes_orders.png)
+
+![Postman Run Collection - Ratings, 404/403/409 y Aggregate](postman_run_03_ratings_aggregate.png)
+
+![Postman Run Collection - Delete protegido 409 y Cascada](postman_run_04_delete_cascade.png)
+
+![Postman Run Summary - Vista general 37/37](postman_run_05.png)
+
+![Postman POST /api/dishes - 201 Created](postman_post_dish.png)
+
+![Postman POST /api/ratings - 201 Created con datos copiados](postman_post_rating.png)
+
+### 8.2 MongoDB Compass — Colecciones (`dishes` y `orderratings`)
+
+![MongoDB Compass - Colección dishes](compass_dishes.png)
+
+![MongoDB Compass - Colección orderratings](compass_orderratings.png)
+
+![MongoDB Compass - Índices de orderratings (orderId único y compuesto)](compass_orderratings_indexes.png)
+
+### 8.3 pgAdmin (PostgreSQL) — Tabla `Order` con columna `dishId` y ERD
+
+![pgAdmin - Tabla Order con dishId de MongoDB](pgadmin_order_dishid.png)
+
+![pgAdmin - Diagrama relacional User y Order](pgadmin_erd_order.png)
+
+
+![Postman Run Collection - Run results](postman_run_05.png)
