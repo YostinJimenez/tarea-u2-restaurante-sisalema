@@ -1,0 +1,15 @@
+node_modules/
+
+# Keep environment variables out of version control
+.env
+.env-example
+
+# Prisma generated artifacts
+/generated/prisma
+
+# Kits, archivos comprimidos y copias temporales locales
+TareaU2_Kit/
+TareaU2_Kit.zip
+Lab2_Kit.zip
+docker-compose (1).yml
+conexion_mongodb.txt

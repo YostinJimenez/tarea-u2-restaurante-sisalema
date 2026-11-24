@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  password     String
+  role         Role
+  appointments Appointment[]
+  orders       Order[]
+}
+
+model Appointment {
+  id          Int       @id @default(autoincrement())
+  date        DateTime
+  user        User      @relation(fields: [userId], references: [id])
+  userId      Int
+  timeBlock   TimeBlock @relation(fields: [timeBlockId], references: [id])
+  timeBlockId Int
+}
+
+model TimeBlock {
+  id          Int           @id @default(autoincrement())
+  startTime   DateTime
+  endTime     DateTime
+  appointment Appointment[]
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  user            User        @relation(fields: [userId], references: [id])
+  userId          Int
+  dishId          String?
+  serviceType     ServiceType @default(MESA)
+  tableNumber     Int?
+  deliveryAddress String?
+  quantity        Int         @default(1)
+  unitPrice       Decimal     @db.Decimal(10, 2)
+  deliveryFee     Decimal     @default(0) @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  status          OrderStatus @default(PENDIENTE)
+  createdAt       DateTime    @default(now())
+
+  @@index([dishId])
+  @@index([userId])
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ServiceType {
+  MESA
+  DOMICILIO
+}
+
+enum OrderStatus {
+  PENDIENTE
+  EN_PREPARACION
+  ENTREGADO
+  PAGADO
+  CANCELADO
+}

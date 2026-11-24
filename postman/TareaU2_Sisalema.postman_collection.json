@@ -1,0 +1,807 @@
+{
+  "info": {
+    "name": "TareaU2 - Restaurante Hibrido (Yostin Sisalema)",
+    "description": "Colección repetible de pruebas para la Tarea Individual U2 (Caso 6: Restaurante - PostgreSQL + MongoDB). Crea sus propios datos, valida CRUD, consultas, integraciones, errores 400/401/403/404/409, $in, populate, aggregate y limpia todo al finalizar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3005"
+    },
+    {
+      "key": "tokenA",
+      "value": ""
+    },
+    {
+      "key": "tokenB",
+      "value": ""
+    },
+    {
+      "key": "dishCode",
+      "value": ""
+    },
+    {
+      "key": "dishId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "ratingId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Auth - Register User A (Owner)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Registro User A responde 201 o 409 si ya existe', function () {",
+              "    pm.expect([201, 409]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Yostin Sisalema\",\n  \"email\": \"yostin.u2@restaurante.test\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "02. Auth - Login User A (JWT)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login User A responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Login User A retorna token JWT', function () {",
+              "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.collectionVariables.set('tokenA', json.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"yostin.u2@restaurante.test\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "03. Auth - Register User B (Other User)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Registro User B responde 201 o 409 si ya existe', function () {",
+              "    pm.expect([201, 409]).to.include(pm.response.code);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cliente Externo\",\n  \"email\": \"externo.u2@restaurante.test\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      }
+    },
+    {
+      "name": "04. Auth - Login User B (JWT)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login User B responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Login User B retorna token JWT', function () {",
+              "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+              "});",
+              "pm.collectionVariables.set('tokenB', json.token);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"externo.u2@restaurante.test\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      }
+    },
+    {
+      "name": "05. Dishes - POST sin JWT (401)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Crear plato sin JWT responde 401', function () {",
+              "    pm.response.to.have.status(401);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Plato sin token\"\n}"
+        },
+        "url": "{{baseUrl}}/api/dishes"
+      }
+    },
+    {
+      "name": "06. Dishes - POST inválido (400 validación Mongoose)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Datos inválidos de plato responden 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Incluye mensajes de validación en español', function () {",
+              "    pm.expect(json.errors).to.be.an('array').and.have.length.greaterThan(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"AB\",\n  \"code\": \"MALO\",\n  \"description\": \"Corta\",\n  \"category\": \"snack\",\n  \"price\": 0,\n  \"ingredients\": [\"Unico\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/dishes"
+      }
+    },
+    {
+      "name": "07. Dishes - POST válido (201 + slug + virtual)",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const num = Math.floor(10 + Math.random() * 89);",
+              "pm.collectionVariables.set('dishCode', 'PLT-' + num);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Crear plato válido responde 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Genera slug con pre(validate) sin next', function () {",
+              "    pm.expect(json.slug).to.eql('ceviche-de-camaron-costeno');",
+              "});",
+              "pm.test('Incluye virtual menuSummary y arreglos embebidos', function () {",
+              "    pm.expect(json.menuSummary).to.include(pm.collectionVariables.get('dishCode'));",
+              "    pm.expect(json.ingredients).to.be.an('array').with.lengthOf(4);",
+              "    pm.expect(json.allergens).to.include('mariscos');",
+              "});",
+              "pm.collectionVariables.set('dishId', json._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ceviche de Camarón Costeño\",\n  \"code\": \"{{dishCode}}\",\n  \"description\": \"Ceviche fresco marinado en jugo de limón con cebolla paiteña, tomate y chifles crujientes.\",\n  \"category\": \"plato_fuerte\",\n  \"price\": 12.5,\n  \"prepMinutes\": 15,\n  \"ingredients\": [\"Camarón\", \"Limón\", \"Cebolla paiteña\", \"Tomate\"],\n  \"allergens\": [\"mariscos\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/dishes"
+      }
+    },
+    {
+      "name": "08. Dishes - GET con regex (?q=), proyección (?fields=) y orden (?sort=)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Listar platos con filtros responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const list = pm.response.json();",
+              "pm.test('Regex encuentra el plato creado y aplica proyección', function () {",
+              "    pm.expect(list).to.be.an('array').and.not.empty;",
+              "    const found = list.find(d => d._id === pm.collectionVariables.get('dishId'));",
+              "    pm.expect(found).to.exist;",
+              "    pm.expect(found.name).to.eql('Ceviche de Camarón Costeño');",
+              "    pm.expect(found.description).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/dishes?q=Ceviche&fields=name,price,category,code&sort=price"
+      }
+    },
+    {
+      "name": "09. Dishes - GET /:id inválido (400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('ObjectId inválido responde 400', function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/dishes/id-invalido-123"
+      }
+    },
+    {
+      "name": "10. Dishes - GET /:id inexistente (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Plato inexistente responde 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/dishes/507f1f77bcf86cd799439011"
+      }
+    },
+    {
+      "name": "11. Dishes - GET /:id válido (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Obtener plato por ID responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Retorna el plato con virtual menuSummary', function () {",
+              "    pm.expect(json._id).to.eql(pm.collectionVariables.get('dishId'));",
+              "    pm.expect(json.menuSummary).to.be.a('string').and.include('Ceviche');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      }
+    },
+    {
+      "name": "12. Dishes - PUT /:id con findById + save() (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Actualizar plato responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Actualiza precio y recalcula slug mediante save()', function () {",
+              "    pm.expect(json.price).to.eql(14);",
+              "    pm.expect(json.slug).to.eql('ceviche-mixto-especial');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ceviche Mixto Especial\",\n  \"price\": 14.00,\n  \"ingredients\": [\"Camarón\", \"Pescado\", \"Limón\", \"Cebolla paiteña\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      }
+    },
+    {
+      "name": "13. Orders - POST con dishId inexistente en MongoDB (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pedido con plato inexistente responde 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"dishId\": \"507f1f77bcf86cd799439011\",\n  \"serviceType\": \"MESA\",\n  \"tableNumber\": 4,\n  \"quantity\": 1\n}"
+        },
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "14. Orders - POST válido en PostgreSQL validando MongoDB (201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Crear pedido válido responde 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Guarda dishId String y calcula total exacto (14*2 + 2.50 = 30.50)', function () {",
+              "    pm.expect(json.dishId).to.eql(pm.collectionVariables.get('dishId'));",
+              "    pm.expect(Number(json.total)).to.eql(30.5);",
+              "    pm.expect(json.serviceType).to.eql('DOMICILIO');",
+              "});",
+              "pm.collectionVariables.set('orderId', json.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"dishId\": \"{{dishId}}\",\n  \"serviceType\": \"DOMICILIO\",\n  \"deliveryAddress\": \"Av. Amazonas N34-120 y Naciones Unidas\",\n  \"quantity\": 2\n}"
+        },
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "15. Orders - GET consulta unida con $in + Map (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Listar pedidos unidos responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const orders = pm.response.json();",
+              "pm.test('Une datos de PostgreSQL con Dish de MongoDB vía $in', function () {",
+              "    const current = orders.find(o => o.id === Number(pm.collectionVariables.get('orderId')));",
+              "    pm.expect(current).to.exist;",
+              "    pm.expect(current.dish).to.be.an('object');",
+              "    pm.expect(current.dish.name).to.eql('Ceviche Mixto Especial');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/orders"
+      }
+    },
+    {
+      "name": "16. Ratings - POST con orderId inexistente en PostgreSQL (404)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Calificar pedido inexistente responde 404', function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": 999999,\n  \"rating\": 5,\n  \"comment\": \"Pedido no registrado\"\n}"
+        },
+        "url": "{{baseUrl}}/api/ratings"
+      }
+    },
+    {
+      "name": "17. Ratings - POST pedido de otro usuario (403)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Calificar pedido de otro usuario responde 403', function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenB}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": {{orderId}},\n  \"rating\": 2,\n  \"comment\": \"No soy dueño de este pedido\"\n}"
+        },
+        "url": "{{baseUrl}}/api/ratings"
+      }
+    },
+    {
+      "name": "18. Ratings - POST válido en MongoDB validando PostgreSQL (201 + datos copiados)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Crear calificación válida responde 201', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Copia customerName y serviceType desde PostgreSQL', function () {",
+              "    pm.expect(json.customerName).to.eql('Yostin Sisalema');",
+              "    pm.expect(json.serviceType).to.eql('DOMICILIO');",
+              "    pm.expect(json.orderId).to.eql(Number(pm.collectionVariables.get('orderId')));",
+              "    pm.expect(json.tags).to.include('fresco');",
+              "});",
+              "pm.collectionVariables.set('ratingId', json._id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": {{orderId}},\n  \"rating\": 5,\n  \"comment\": \"Llegó a tiempo, porción generosa y excelente sazón.\",\n  \"tags\": [\"fresco\", \"rapido\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/ratings"
+      }
+    },
+    {
+      "name": "19. Ratings - POST duplicado mismo pedido (409 E11000)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Calificación duplicada para mismo pedido responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"orderId\": {{orderId}},\n  \"rating\": 4,\n  \"comment\": \"Intento duplicado\"\n}"
+        },
+        "url": "{{baseUrl}}/api/ratings"
+      }
+    },
+    {
+      "name": "20. Ratings - GET lista con populate + orden + aggregate (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Listar calificaciones con aggregate responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Retorna summary de aggregate y dish con populate', function () {",
+              "    pm.expect(json.summary.totalRatings).to.eql(1);",
+              "    pm.expect(json.summary.averageRating).to.eql(5);",
+              "    pm.expect(json.ratings).to.be.an('array').with.lengthOf(1);",
+              "    pm.expect(json.ratings[0].dish.name).to.eql('Ceviche Mixto Especial');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/ratings?dishId={{dishId}}"
+      }
+    },
+    {
+      "name": "21. Dishes - DELETE protegido cuando PostgreSQL lo usa (409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Eliminar plato usado por pedido en PG responde 409', function () {",
+              "    pm.response.to.have.status(409);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      }
+    },
+    {
+      "name": "22. Cleanup - DELETE pedido en PostgreSQL (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Eliminar pedido de prueba responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/orders/{{orderId}}"
+      }
+    },
+    {
+      "name": "23. Cleanup - DELETE plato en MongoDB con cascada en calificaciones (200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Eliminar plato sin pedidos en PG responde 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "pm.test('Elimina en cascada la calificación asociada en MongoDB', function () {",
+              "    pm.expect(json.deletedRatingsCount).to.eql(1);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{tokenA}}"
+          }
+        ],
+        "url": "{{baseUrl}}/api/dishes/{{dishId}}"
+      }
+    },
+    {
+      "name": "24. Verify Cascade - GET calificaciones del plato eliminado (vacío)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Verificar cascada responde 200 sin huérfanos', function () {",
+              "    pm.response.to.have.status(200);",
+              "    const json = pm.response.json();",
+              "    pm.expect(json.summary.totalRatings).to.eql(0);",
+              "    pm.expect(json.ratings).to.be.an('array').with.lengthOf(0);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/ratings?dishId={{dishId}}"
+      }
+    }
+  ]
+}
